@@ -1,0 +1,92 @@
+:root {
+  --bg-color: #282a36;
+  --text-color: #f8f8f2;
+  --prompt-user-color: #50fa7b;
+  --prompt-dir-color: #8be9fd;
+  --cmd-color: #f8f8f2;
+  --link-color: #bd93f9;
+  --link-hover-color: #ff79c6;
+  --header-bg: #21222c;
+  --border-color: #44475a;
+  --focused-border-color: #6272a4;
+}
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: "Fira Code", monospace;
+}
+.terminal-window {
+  background-color: var(--header-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+.terminal-content {
+  background-color: var(--bg-color);
+}
+.prompt-user {
+  color: var(--prompt-user-color);
+}
+.prompt-dir {
+  color: var(--prompt-dir-color);
+}
+#command-input {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  caret-color: transparent;
+  color: var(--cmd-color);
+}
+a {
+  color: var(--link-color);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover {
+  color: var(--link-hover-color);
+  text-decoration: underline;
+}
+.cursor {
+  display: inline-block;
+  background-color: var(--text-color);
+  width: 10px;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+  50% {
+    background-color: var(--text-color);
+  }
+  from,
+  to {
+    background-color: transparent;
+  }
+}
+.terminal-content::-webkit-scrollbar,
+#modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+.terminal-content::-webkit-scrollbar-track,
+#modal-content::-webkit-scrollbar-track {
+  background: var(--header-bg);
+}
+.terminal-content::-webkit-scrollbar-thumb,
+#modal-content::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 4px;
+}
+#modal-container {
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+}
+#modal-window {
+  background-color: var(--bg-color);
+  border: 2px solid var(--focused-border-color);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+#modal-header {
+  background-color: var(--focused-border-color);
+  color: var(--bg-color);
+  font-weight: bold;
+}
+#modal-content {
+  color: var(--text-color);
+}
