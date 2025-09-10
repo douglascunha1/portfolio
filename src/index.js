@@ -6,8 +6,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalTitle = document.getElementById("modal-title");
   const modalContent = document.getElementById("modal-content");
   const modalClose = document.getElementById("modal-close");
+  const mainContent = document.getElementById("main-content");
+  const cmatrixCanvas = document.getElementById("cmatrix-canvas");
 
   const commandHistory = [];
+  let cmatrixInterval = null;
   const banner = `<div class="mb-2"><p>Bem-vindo ao meu portfólio interativo.</p><p>Digite <span class="text-yellow-400">'help'</span> ou <span class="text-yellow-400">'ls'</span> para começar.</p></div>`;
 
   const filesystem = {
@@ -90,6 +93,91 @@ document.addEventListener("DOMContentLoaded", () => {
     return true;
   }
 
+  function cowsay(message) {
+    const bubble = [];
+    const maxLength = 40;
+    let line = "";
+
+    const words = message.split(" ");
+    for (const word of words) {
+      if ((line + word).length > maxLength) {
+        bubble.push(line.trim());
+        line = "";
+      }
+      line += word + " ";
+    }
+    bubble.push(line.trim());
+
+    const topBorder = ` ${"_".repeat(maxLength + 2)} `;
+    const bottomBorder = ` ${"-".repeat(maxLength + 2)} `;
+
+    const bubbleContent = bubble.map((l, i) => {
+      const padding = " ".repeat(maxLength - l.length);
+      if (bubble.length === 1) return `< ${l}${padding} >`;
+      if (i === 0) return `/ ${l}${padding} \\`;
+      if (i === bubble.length - 1) return `\\ ${l}${padding} /`;
+      return `| ${l}${padding} |`;
+    }).join('\n');
+
+    const cow = `
+        \\   ^__^
+         \\  (oo)\\_______
+            (__)\\       )\\/\\
+                ||----w |
+                ||     ||`;
+
+    return `<pre>${topBorder}\n${bubbleContent}\n${bottomBorder}${cow}</pre>`;
+  }
+
+  function startCmatrix() {
+    mainContent.classList.add('hidden');
+    cmatrixCanvas.classList.remove('hidden');
+    
+    const ctx = cmatrixCanvas.getContext('2d');
+    cmatrixCanvas.width = window.innerWidth;
+    cmatrixCanvas.height = window.innerHeight;
+
+    const chars = 'ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ0123456789'.split('');
+    const fontSize = 16;
+    const columns = cmatrixCanvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function draw() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, cmatrixCanvas.width, cmatrixCanvas.height);
+      ctx.fillStyle = '#0F0';
+      ctx.font = `${fontSize}px monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > cmatrixCanvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    cmatrixInterval = setInterval(draw, 33);
+    window.addEventListener('keydown', stopCmatrixOnEsc);
+  }
+
+  function stopCmatrixOnEsc(e) {
+      if (e.key === 'Escape') {
+        stopCmatrix();
+      }
+  }
+
+  function stopCmatrix() {
+    if (cmatrixInterval) {
+      clearInterval(cmatrixInterval);
+      cmatrixInterval = null;
+      mainContent.classList.remove('hidden');
+      cmatrixCanvas.classList.add('hidden');
+      window.removeEventListener('keydown', stopCmatrixOnEsc);
+      commandInput.focus();
+    }
+  }
+
   const commands = {
     help: {
       description: 'Lista todos os comandos disponíveis.',
@@ -100,6 +188,21 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         helpText += '</ul>';
         return helpText;
+      }
+    },
+    cowsay: {
+      description: 'Uma vaca diz algo. Uso: cowsay [mensagem]',
+      action: (args) => {
+        const message = args.join(' ');
+        if (!message) return 'A vaca precisa de algo para dizer. Uso: cowsay [mensagem]';
+        return cowsay(message);
+      }
+    },
+    cmatrix: {
+      description: 'Você toma a pílula vermelha...',
+      action: () => {
+        startCmatrix();
+        return;
       }
     },
     ls: {
@@ -145,6 +248,35 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return `<span class="text-red-500">Erro:</span> não há manual para '${cmd}'.`;
       }
+    },
+    crypto: {
+        description: 'Verifica o preço de uma criptomoeda. Uso: crypto [bitcoin]',
+        action: async(args) => {
+            const coin = args[0];
+            if (!coin) return 'Uso: crypto [bitcoin|ethereum|...]';
+            try {
+                const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coin}&vs_currencies=usd,brl`);
+                if (!response.ok) throw new Error('Moeda não encontrada ou falha na API.');
+                const data = await response.json();
+                if (!data[coin]) throw new Error(`Dados para '${coin}' não encontrados.`);
+                return `<div>Preço de <span class="text-yellow-400">${coin}</span>:</div>
+                        <div>- USD: $${data[coin].usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                        <div>- BRL: R$${data[coin].brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
+            } catch(error) {
+                return `<span class="text-red-500">Erro:</span> ${error.message}`;
+            }
+        }
+    },
+    sudo: {
+      description: 'Executa um comando como superusuário.',
+      action: (args) => {
+        if (args[0] === 'theme') return `Acesso de root concedido. O comando 'theme' já tem privilégios elevados.`;
+        return `<p class="text-red-500">User not in the sudoers file. This incident will be reported.</p>`;
+      }
+    },
+    date: {
+        description: 'Exibe a data e hora atuais.',
+        action: () => new Date().toLocaleString('pt-BR')
     },
     github: {
       description: 'Busca meus repositórios mais recentes no GitHub.',
@@ -222,7 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   };
 
-  const savedTheme = localStorage.getItem("terminalTheme") || "dracula";
+  const savedTheme = localStorage.getItem("terminalTheme") || "catppuccin";
   applyTheme(savedTheme);
 
   historyContainer.innerHTML = banner;
