@@ -48,6 +48,130 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  const themes = {
+    dracula: {
+      "--bg-color": "#282a36",
+      "--text-color": "#f8f8f2",
+      "--prompt-user-color": "#50fa7b",
+      "--prompt-dir-color": "#8be9fd",
+      "--prompt-arrow-color": "#ff79c6",
+      "--link-color": "#bd93f9",
+      "--link-hover-color": "#ff79c6",
+      "--header-bg": "#21222c",
+      "--border-color": "#44475a",
+      "--focused-border-color": "#6272a4",
+    },
+    nord: {
+      "--bg-color": "#2e3440",
+      "--text-color": "#d8dee9",
+      "--prompt-user-color": "#a3be8c",
+      "--prompt-dir-color": "#88c0d0",
+      "--prompt-arrow-color": "#b48ead",
+      "--link-color": "#81a1c1",
+      "--link-hover-color": "#8fbcbb",
+      "--header-bg": "#3b4252",
+      "--border-color": "#4c566a",
+      "--focused-border-color": "#5e81ac",
+    },
+    solarized: {
+      "--bg-color": "#002b36",
+      "--text-color": "#839496",
+      "--prompt-user-color": "#859900",
+      "--prompt-dir-color": "#268bd2",
+      "--prompt-arrow-color": "#d33682",
+      "--link-color": "#6c71c4",
+      "--link-hover-color": "#cb4b16",
+      "--header-bg": "#073642",
+      "--border-color": "#586e75",
+      "--focused-border-color": "#93a1a1",
+    },
+    gruvbox: {
+      "--bg-color": "#282828",
+      "--text-color": "#ebdbb2",
+      "--prompt-user-color": "#b8bb26",
+      "--prompt-dir-color": "#83a598",
+      "--prompt-arrow-color": "#d65d0e",
+      "--link-color": "#d3869b",
+      "--link-hover-color": "#fabd2f",
+      "--header-bg": "#1d2021",
+      "--border-color": "#504945",
+      "--focused-border-color": "#665c54",
+    },
+    catppuccin: {
+      "--bg-color": "#1e1e2e",
+      "--text-color": "#cdd6f4",
+      "--prompt-user-color": "#a6e3a1",
+      "--prompt-dir-color": "#89b4fa",
+      "--prompt-arrow-color": "#f38ba8",
+      "--link-color": "#cba6f7",
+      "--link-hover-color": "#f5c2e7",
+      "--header-bg": "#181825",
+      "--border-color": "#45475a",
+      "--focused-border-color": "#7f849c",
+    },
+    monokai: {
+      "--bg-color": "#272822",
+      "--text-color": "#f8f8f2",
+      "--prompt-user-color": "#a6e22e",
+      "--prompt-dir-color": "#66d9ef",
+      "--prompt-arrow-color": "#f92672",
+      "--link-color": "#ae81ff",
+      "--link-hover-color": "#fd971f",
+      "--header-bg": "#1e1f1a",
+      "--border-color": "#75715e",
+      "--focused-border-color": "#f92672",
+    },
+    one_dark_pro: {
+      "--bg-color": "#282c34",
+      "--text-color": "#abb2bf",
+      "--prompt-user-color": "#98c379",
+      "--prompt-dir-color": "#61afef",
+      "--prompt-arrow-color": "#c678dd",
+      "--link-color": "#d19a66",
+      "--link-hover-color": "#e5c07b",
+      "--header-bg": "#21252b",
+      "--border-color": "#3a3f4b",
+      "--focused-border-color": "#528bff",
+    },
+    tokyo_night: {
+      "--bg-color": "#1a1b26",
+      "--text-color": "#a9b1d6",
+      "--prompt-user-color": "#73daca",
+      "--prompt-dir-color": "#7aa2f7",
+      "--prompt-arrow-color": "#bb9af7",
+      "--link-color": "#f7768e",
+      "--link-hover-color": "#ff9e64",
+      "--header-bg": "#16161e",
+      "--border-color": "#414868",
+      "--focused-border-color": "#7aa2f7",
+    },
+    material_darker: {
+      "--bg-color": "#212121",
+      "--text-color": "#eeffff",
+      "--prompt-user-color": "#c3e88d",
+      "--prompt-dir-color": "#82aaff",
+      "--prompt-arrow-color": "#f07178",
+      "--link-color": "#c792ea",
+      "--link-hover-color": "#ffcb6b",
+      "--header-bg": "#2a2a2a",
+      "--border-color": "#545454",
+      "--focused-border-color": "#80cbc4",
+    },
+  };
+
+  function applyTheme(themeName) {
+    const theme = themes[themeName];
+    if (!theme) return false;
+    for (const [key, value] of Object.entries(theme)) {
+      document.documentElement.style.setProperty(key, value);
+    }
+    localStorage.setItem("terminalTheme", themeName);
+    return true;
+  }
+
+  const savedTheme = localStorage.getItem("terminalTheme") || "dracula";
+  applyTheme(savedTheme);
+
   async function executeCommand(commandLine) {
     const [command, ...args] = commandLine.split(" ");
     let output = "";
@@ -89,6 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <li><span class="text-yellow-400 w-24 inline-block">email</span>     Copia meu email para a área de transferência.</li>
                         <li><span class="text-yellow-400 w-24 inline-block">history</span>   Mostra o histórico de comandos.</li>
                         <li><span class="text-yellow-400 w-24 inline-block">motd</span>      Exibe uma mensagem do dia.</li>
+                        <li><span class="text-yellow-400 w-24 inline-block">theme</span>     Altera o tema. Uso: theme [nome]</li>
                         <li><span class="text-yellow-400 w-24 inline-block">clear</span>     Limpa o terminal.</li>
                     </ul>`;
         break;
@@ -157,6 +282,18 @@ document.addEventListener("DOMContentLoaded", () => {
       case "banner":
         historyContainer.innerHTML += banner;
         return;
+      case "theme":
+        const themeName = args[0];
+        if (!themeName) {
+          output = `Uso: theme [nome]. Temas disponíveis: <span class="text-yellow-400">${Object.keys(
+            themes
+          ).join(", ")}</span>`;
+        } else if (applyTheme(themeName)) {
+          output = `Tema alterado para <span class="text-yellow-400">${themeName}</span>.`;
+        } else {
+          output = `<span class="text-red-500">Erro:</span> tema '${themeName}' não encontrado.`;
+        }
+        break;
       default:
         output = `<p>Comando não encontrado: <span class="text-red-500">${command}</span>. Digite 'help'.</p>`;
     }
